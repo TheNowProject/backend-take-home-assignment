@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["jsonProtocol"]
+}
+
+generator kysely {
+  provider  = "prisma-kysely"
+  output    = "../db"
+  fileName  = "types.ts"
+  camelCase = true
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./db.sqlite"
+}
+
+model User {
+  id          Int      @map("id")           @id @default(autoincrement())
+  fullName    String   @map("full_name")
+  phoneNumber String   @map("phone_number")
+  createdAt   DateTime @map("created_at")   @default(now())
+  updatedAt   DateTime @map("updated_at")   @default(now()) @updatedAt
+
+  @@unique([phoneNumber])
+
+  @@map("users")
+}
+
+model Friendship {
+  id           Int      @map("id")             @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  friendUserId Int      @map("friend_user_id")
+  status       String   @map("status")
+
+  createdAt    DateTime @map("created_at")     @default(now())
+  updatedAt    DateTime @map("updated_at")     @default(now()) @updatedAt
+
+  @@unique([userId, friendUserId])
+  @@index([userId])
+  @@index([friendUserId])
+
+  @@map("friendships")
+}

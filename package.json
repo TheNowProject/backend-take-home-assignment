@@ -1,0 +1,63 @@
+{
+  "name": "tnp-backend-interview",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "4.14.0",
+    "@t3-oss/env-nextjs": "0.3.1",
+    "@tanstack/react-query": "4.29.7",
+    "@trpc/client": "10.26.0",
+    "@trpc/next": "10.26.0",
+    "@trpc/react-query": "10.26.0",
+    "@trpc/server": "10.26.0",
+    "better-sqlite3": "8.4.0",
+    "kysely": "0.26.1",
+    "next": "13.4.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "superjson": "1.12.2",
+    "zod": "3.21.4"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "8.0.2",
+    "@types/better-sqlite3": "7.6.4",
+    "@types/eslint": "8.37.0",
+    "@types/node": "18.16.0",
+    "@types/prettier": "2.7.2",
+    "@types/react": "18.2.6",
+    "@types/react-dom": "18.2.4",
+    "@typescript-eslint/eslint-plugin": "5.59.6",
+    "@typescript-eslint/parser": "5.59.6",
+    "autoprefixer": "10.4.14",
+    "eslint": "8.40.0",
+    "eslint-config-next": "13.4.2",
+    "eslint-config-prettier": "8.8.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "postcss": "8.4.21",
+    "prettier": "2.8.8",
+    "prettier-plugin-tailwindcss": "^0.2.8",
+    "prisma": "4.14.0",
+    "prisma-kysely": "1.5.0",
+    "tailwindcss": "3.3.0",
+    "sql-formatter": "12.2.3",
+    "typescript": "5.0.4",
+    "vitest": "0.33.0"
+  },
+  "ct3aMetadata": {
+    "initVersion": "7.15.0"
+  },
+  "prisma": {
+    "schema": "src/server/db/schema.prisma"
+  }
+}
