@@ -51,8 +51,8 @@ you do them in order. There are further instructions embeded in the questions.
 
   - [Question 1](https://github.com/TheNowProject/backend-take-home-assignment/blob/main/src/server/api/routers/friendship-request-router.ts#L98)
   - [Question 2](https://github.com/TheNowProject/backend-take-home-assignment/blob/main/src/server/api/routers/friendship-request-router.ts#L128)
-  - [Question 3](https://github.com/TheNowProject/backend-take-home-assignment/blob/main/src/server/api/routers/friendship-request-router.ts#L128)
-  - [Question 4](https://github.com/TheNowProject/backend-take-home-assignment/blob/main/src/server/api/routers/friendship-request-router.ts#L128)
+  - [Question 3](https://github.com/TheNowProject/backend-take-home-assignment/blob/main/src/server/api/routers/friendship-request-router.ts#L69)
+  - [Question 4](https://github.com/TheNowProject/backend-take-home-assignment/blob/main/src/server/api/routers/my-friend-router.ts#L25)
 
 NOTE: if the links to the questions do not work, you can find them in the
 following files
