@@ -14,7 +14,7 @@ This take-home assignment aims to assess the followings:
   - Your competence in Javascript/TypeScript & their ecosystem
   - Your competence in SQL
   - Your ability to follow instructions
-  - Your ability to adapt to new codebase
+  - Your ability to adapt to a new codebase
   - Your ability to read documents
   - Your ability to "Google" & "Stackoverflow" your way to the answers
 
