@@ -1,3 +1,5 @@
+import { send } from 'process'
+
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
@@ -117,6 +119,17 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+
+        await t
+          .updateTable('friendships')
+          .set({ status: 'accepted', friendUserId: ctx.session.userId })
+          .where('userId', '=', input.friendUserId)
+          .executeTakeFirst()
+        await t
+          .updateTable('friendships')
+          .set({ status: 'accepted', friendUserId: input.friendUserId })
+          .where('userId', '=', ctx.session.userId)
+          .executeTakeFirst()
       })
     }),
 
