@@ -1,5 +1,3 @@
-import { send } from 'process'
-
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
@@ -122,13 +120,18 @@ export const friendshipRequestRouter = router({
 
         await t
           .updateTable('friendships')
-          .set({ status: 'accepted', friendUserId: ctx.session.userId })
+          .set({ status: FriendshipStatusSchema.Values['accepted'] })
           .where('userId', '=', input.friendUserId)
+          .where('friendUserId', '=', ctx.session.userId)
+          .where('status', '=', FriendshipStatusSchema.Values['requested'])
           .executeTakeFirst()
         await t
-          .updateTable('friendships')
-          .set({ status: 'accepted', friendUserId: input.friendUserId })
-          .where('userId', '=', ctx.session.userId)
+          .insertInto('friendships')
+          .values({
+            userId: ctx.session.userId,
+            friendUserId: input.friendUserId,
+            status: FriendshipStatusSchema.Values['accepted'],
+          })
           .executeTakeFirst()
       })
     }),
@@ -150,5 +153,12 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+      await ctx.db
+        .updateTable('friendships')
+        .set({ status: FriendshipStatusSchema.Values['declined'] })
+        .where('userId', '=', input.friendUserId)
+        .where('friendUserId', '=', ctx.session.userId)
+        .where('status', '=', FriendshipStatusSchema.Values['requested'])
+        .executeTakeFirst()
     }),
 })
