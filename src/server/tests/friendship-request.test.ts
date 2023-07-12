@@ -117,7 +117,7 @@ describe.concurrent('Friendship request', async () => {
    * Scenario:
    *  1. User A sends a friendship request to user B
    */
-  test.skip('Question 3 / Scenario 1', async ({ expect }) => {
+  test('Question 3 / Scenario 1', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
     await expect(
@@ -142,7 +142,7 @@ describe.concurrent('Friendship request', async () => {
    *  2. User B declines the request
    *  3. User A re-sends a new friendship request to user B
    */
-  test.skip('Question 3 / Scenario 2', async ({ expect }) => {
+  test('Question 3 / Scenario 2', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
     await userA.sendFriendshipRequest({
