@@ -137,6 +137,12 @@ export const friendshipRequestRouter = router({
           .where('status', '=', FriendshipStatusSchema.Values['requested'])
           .executeTakeFirst()
         await t
+          .deleteFrom('friendships')
+          .where('userId', '=', ctx.session.userId)
+          .where('friendUserId', '=', input.friendUserId)
+          .where('status', '=', FriendshipStatusSchema.Values['requested'])
+          .executeTakeFirst()
+        await t
           .insertInto('friendships')
           .values({
             userId: ctx.session.userId,
