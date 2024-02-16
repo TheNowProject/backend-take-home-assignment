@@ -84,7 +84,7 @@ export const friendshipRequestRouter = router({
         .values({
           userId: ctx.session.userId,
           friendUserId: input.friendUserId,
-          status: FriendshipStatusSchema.Values['requested'],
+          status: 'requested',
         })
         .execute()
     }),
@@ -94,6 +94,14 @@ export const friendshipRequestRouter = router({
     .input(AnswerFriendshipRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
       await ctx.db.transaction().execute(async (t) => {
+        await t.updateTable('friendship_requests')
+          .set({status:'accepted'})
+          .where({userId: input.userId, friendUserId: input.friendUserId})
+          .execute();
+
+        await t.insertInto('friendship_requests', ['userId', 'friendUserId', 'status'])
+          .values([input.userId, input.friendUserId, 'accepted'])
+          .execute();
         /**
          * Question 1: Implement api to accept a friendship request
          *
@@ -137,5 +145,17 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+
+      await ctx.db.transaction().execute(async (t) => {
+        const result = await t.updateTable('friendship_requests')
+          .set({ status: 'declined' })
+          .where({ userId: input.userId, friendUserId: input.friendUserId })
+          .execute();
+      
+        if (result.affectedRows === 0) {
+          // No friendship request found, consider it as successfully declined
+          console.log("No friendship request found to decline.");
+        }
+      });
     }),
 })
