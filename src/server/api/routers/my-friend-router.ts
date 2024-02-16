@@ -39,11 +39,64 @@ export const myFriendRouter = router({
          * Documentation references:
          *  - https://kysely-org.github.io/kysely/classes/SelectQueryBuilder.html#innerJoin
          */
+        const mainQueryResult = await conn
+        .selectFrom('users as friends')
+        .innerJoin('friendships', 'friendships.friendUserId', 'friends.id')
+        .innerJoin(
+          userTotalFriendCount(conn).as('userTotalFriendCount'),
+          'userTotalFriendCount.userId',
+          'friends.id'
+        )
+        .where('friendships.userId', '=', ctx.session.userId)
+        .where('friendships.friendUserId', '=', input.friendUserId)
+        .where(
+          'friendships.status',
+          '=',
+          FriendshipStatusSchema.Values['accepted']
+        )
+        .select([
+          'friends.id',
+          'friends.fullName',
+          'friends.phoneNumber',
+          'totalFriendCount',
+        ])
+        .executeTakeFirstOrThrow(() => new TRPCError({ code: 'NOT_FOUND' }))
+        .then(
+          z.object({
+            id: IdSchema,
+            fullName: NonEmptyStringSchema,
+            phoneNumber: NonEmptyStringSchema,
+            totalFriendCount: CountSchema,
+          }).parse
+        );
+
+        const mutualFriendCount = await conn
+          .selectFrom('friendships')
+          .where('userId', '=', ctx.session.userId)
+          .whereIn(
+            'friendUserId',
+            conn
+              .select('friendUserId')
+              .from('friendships')
+              .where('userId', '=', input.friendUserId)
+              .where('status', '=', FriendshipStatusSchema.Values['accepted'])
+          )
+          .whereIn(
+            'userId',
+            conn
+              .select('friendUserId')
+              .from('friendships')
+              .where('userId', '=', input.friendUserId)
+              .where('status', '=', FriendshipStatusSchema.Values['accepted'])
+          )
+          .count('*')
+          .executeSelectOne()
+          .then((row: { count: any }) => row.count);
         conn
           .selectFrom('users as friends')
           .innerJoin('friendships', 'friendships.friendUserId', 'friends.id')
           .innerJoin(
-            userTotalFriendCount(conn).as('userTotalFriendCount'),
+            mutualFriendCount(conn).as('userTotalFriendCount'),
             'userTotalFriendCount.userId',
             'friends.id'
           )
@@ -70,7 +123,10 @@ export const myFriendRouter = router({
               mutualFriendCount: CountSchema,
             }).parse
           )
-      )
+          return {
+            ...mainQueryResult,
+            mutualFriendCount,
+          };
     }),
 })
 
@@ -84,3 +140,4 @@ const userTotalFriendCount = (db: Database) => {
     ])
     .groupBy('friendships.userId')
 }
+
