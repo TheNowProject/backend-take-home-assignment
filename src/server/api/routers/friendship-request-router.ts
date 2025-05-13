@@ -79,14 +79,34 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
-      return ctx.db
-        .insertInto('friendships')
-        .values({
-          userId: ctx.session.userId,
-          friendUserId: input.friendUserId,
-          status: FriendshipStatusSchema.Values['requested'],
-        })
-        .execute()
+
+      // First check if there's an existing friendship record and update it
+      const existingFriendship = await ctx.db
+        .selectFrom('friendships')
+        .where('friendships.userId', '=', ctx.session.userId)
+        .where('friendships.friendUserId', '=', input.friendUserId)
+        .select('friendships.id')
+        .executeTakeFirst()
+
+      if (existingFriendship) {
+        // Update the existing record with 'requested' status
+        return await ctx.db
+          .updateTable('friendships')
+          .set({ status: FriendshipStatusSchema.Values['requested'] })
+          .where('friendships.userId', '=', ctx.session.userId)
+          .where('friendships.friendUserId', '=', input.friendUserId)
+          .execute()
+      } else {
+        // Create a new friendship request record
+        return await ctx.db
+          .insertInto('friendships')
+          .values({
+            userId: ctx.session.userId,
+            friendUserId: input.friendUserId,
+            status: FriendshipStatusSchema.Values['requested'],
+          })
+          .execute()
+      }
     }),
 
   accept: procedure
@@ -117,6 +137,45 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+
+        const { friendUserId } = input
+
+        // 1. Update the existing friendship request to 'accepted'
+        await t
+          .updateTable('friendships')
+          .set({ status: FriendshipStatusSchema.Values['accepted'] })
+          .where('friendships.userId', '=', friendUserId)
+          .where('friendships.friendUserId', '=', ctx.session.userId)
+          .execute()
+
+        // 2. Create a reciprocal friendship request with 'accepted' status
+        // First check if a reciprocal record already exists
+        const existingReciprocal = await t
+          .selectFrom('friendships')
+          .where('friendships.userId', '=', ctx.session.userId)
+          .where('friendships.friendUserId', '=', friendUserId)
+          .select('friendships.id')
+          .executeTakeFirst()
+
+        if (existingReciprocal) {
+          // Update the existing record
+          await t
+            .updateTable('friendships')
+            .set({ status: FriendshipStatusSchema.Values['accepted'] })
+            .where('friendships.userId', '=', ctx.session.userId)
+            .where('friendships.friendUserId', '=', friendUserId)
+            .execute()
+        } else {
+          // Create a new record
+          await t
+            .insertInto('friendships')
+            .values({
+              userId: ctx.session.userId,
+              friendUserId: friendUserId,
+              status: FriendshipStatusSchema.Values['accepted'],
+            })
+            .execute()
+        }
       })
     }),
 
@@ -137,5 +196,14 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+
+      const { friendUserId } = input
+
+      await ctx.db
+        .updateTable('friendships')
+        .set({ status: FriendshipStatusSchema.Values['declined'] })
+        .where('friendships.userId', '=', friendUserId)
+        .where('friendships.friendUserId', '=', ctx.session.userId)
+        .executeTakeFirst()
     }),
 })
