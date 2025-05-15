@@ -24,11 +24,11 @@ const canSendFriendshipRequest = authGuard.unstable_pipe(
         () =>
           new TRPCError({
             code: 'BAD_REQUEST',
-          })
+          }),
       )
 
     return next({ ctx })
-  }
+  },
 )
 
 const AnswerFriendshipRequestInputSchema = z.object({
@@ -46,7 +46,7 @@ const canAnswerFriendshipRequest = authGuard.unstable_pipe(
       .where(
         'friendships.status',
         '=',
-        FriendshipStatusSchema.Values['requested']
+        FriendshipStatusSchema.Values['requested'],
       )
       .select('friendships.id')
       .limit(1)
@@ -57,7 +57,7 @@ const canAnswerFriendshipRequest = authGuard.unstable_pipe(
       })
 
     return next({ ctx })
-  }
+  },
 )
 
 export const friendshipRequestRouter = router({
@@ -79,6 +79,29 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
+      const isRequestAlreadyExists = await ctx.db
+        .selectFrom('friendships')
+        .where('friendships.userId', '=', ctx.session.userId)
+        .where('friendships.friendUserId', '=', input.friendUserId)
+        .where('friendships.status', 'in', [
+          FriendshipStatusSchema.Values['accepted'],
+          FriendshipStatusSchema.Values['declined'],
+        ])
+        .select('friendships.id')
+        .limit(1)
+        .executeTakeFirst()
+
+      if (isRequestAlreadyExists) {
+        return await ctx.db
+          .updateTable('friendships')
+          .set({
+            status: FriendshipStatusSchema.Values['requested'],
+          })
+          .where('friendships.userId', '=', ctx.session.userId)
+          .where('friendships.friendUserId', '=', input.friendUserId)
+          .execute()
+      }
+
       return ctx.db
         .insertInto('friendships')
         .values({
@@ -94,6 +117,56 @@ export const friendshipRequestRouter = router({
     .input(AnswerFriendshipRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
       await ctx.db.transaction().execute(async (t) => {
+        const firstSide = await t
+          .updateTable('friendships')
+          .set({
+            status: FriendshipStatusSchema.Values['accepted'],
+          })
+          .where('friendships.userId', '=', input.friendUserId)
+          .where('friendships.friendUserId', '=', ctx.session.userId)
+          .executeTakeFirstOrThrow(() => {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+            })
+          })
+
+        const isSecondSideExists = await t
+          .selectFrom('friendships')
+          .select(['userId', 'friendUserId'])
+          .where('userId', '=', ctx.session.userId)
+          .where('friendUserId', '=', input.friendUserId)
+          .executeTakeFirst()
+
+        if (isSecondSideExists) {
+          const updateSecondSide = await t
+            .updateTable('friendships')
+            .set({
+              status: FriendshipStatusSchema.Values['accepted'],
+            })
+            .where('userId', '=', ctx.session.userId)
+            .where('friendUserId', '=', input.friendUserId)
+            .execute()
+
+          return {
+            firstSide,
+            secondSide: updateSecondSide,
+          }
+        }
+
+        const secondSide = await t
+          .insertInto('friendships')
+          .values({
+            userId: ctx.session.userId,
+            friendUserId: input.friendUserId,
+            status: FriendshipStatusSchema.Values['accepted'],
+          })
+          .executeTakeFirstOrThrow(() => {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+            })
+          })
+
+        return { firstSide, secondSide }
         /**
          * Question 1: Implement api to accept a friendship request
          *
@@ -124,6 +197,23 @@ export const friendshipRequestRouter = router({
     .use(canAnswerFriendshipRequest)
     .input(AnswerFriendshipRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
+      await ctx.db.transaction().execute(async (t) => {
+        const friendshipRequest = await t
+          .updateTable('friendships')
+          .set({
+            status: FriendshipStatusSchema.Values['declined'],
+          })
+          .where('friendships.userId', '=', input.friendUserId)
+          .where('friendships.friendUserId', '=', ctx.session.userId)
+          .executeTakeFirstOrThrow(() => {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+            })
+          })
+
+        return friendshipRequest
+      })
+
       /**
        * Question 2: Implement api to decline a friendship request
        *
