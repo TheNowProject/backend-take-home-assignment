@@ -79,6 +79,26 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
+      const requestFR = await ctx.db
+        .selectFrom('friendships')
+        .where('userId', '=', ctx.session.userId)
+        .where('friendUserId', '=', input.friendUserId)
+        .where('status', '=', FriendshipStatusSchema.Values['declined'])
+        .select('id')
+        .executeTakeFirst()
+
+      if (requestFR) {
+        return ctx.db
+          .updateTable('friendships')
+          .where('id', '=', requestFR.id)
+          .set({
+            status: FriendshipStatusSchema.Values['requested'],
+            updatedAt: new Date(),
+          })
+
+          .execute()
+      }
+
       return ctx.db
         .insertInto('friendships')
         .values({
@@ -117,6 +137,23 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+        await t
+          .updateTable('friendships')
+          .where('userId', '=', input.friendUserId)
+          .where('friendUserId', '=', ctx.session.userId)
+          .where('status', '=', FriendshipStatusSchema.Values['requested'])
+          .set({
+            status: FriendshipStatusSchema.Values['accepted'],
+          })
+          .execute()
+
+        await t
+          .insertInto('friendships')
+          .values({
+            userId: ctx.session.userId,
+            friendUserId: FriendshipStatusSchema.Values['accepted'],
+          })
+          .execute()
       })
     }),
 
@@ -137,5 +174,15 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+
+      await ctx.db
+        .updateTable('friendships')
+        .where('userId', '=', input.friendUserId)
+        .where('friendUserId', '=', ctx.session.userId)
+        .where('status', '=', FriendshipStatusSchema.Values['requested'])
+        .set({
+          status: FriendshipStatusSchema.Values['declined'],
+        })
+        .execute()
     }),
 })

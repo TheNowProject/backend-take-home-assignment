@@ -20,32 +20,29 @@ export const myFriendRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.connection().execute(async (conn) =>
-        /**
-         * Question 4: Implement mutual friend count
-         *
-         * Add `mutualFriendCount` to the returned result of this query. You can
-         * either:
-         *  (1) Make a separate query to count the number of mutual friends,
-         *  then combine the result with the result of this query
-         *  (2) BONUS: Use a subquery (hint: take a look at how
-         *  `totalFriendCount` is implemented)
-         *
-         * Instructions:
-         *  - Go to src/server/tests/friendship-request.test.ts, enable the test
-         * scenario for Question 3
-         *  - Run `yarn test` to verify your answer
-         *
-         * Documentation references:
-         *  - https://kysely-org.github.io/kysely/classes/SelectQueryBuilder.html#innerJoin
-         */
-        conn
+      return ctx.db.connection().execute(async (conn) => {
+        const mutualFriendCountSubquery = conn
+          .selectFrom('friendships as f1')
+          .innerJoin('friendships as f2', (join) =>
+            join
+              .onRef('f1.friendUserId', '=', 'f2.friendUserId')
+              .on('f2.userId', '=', input.friendUserId)
+          )
+          .where('f1.userId', '=', ctx.session.userId)
+          .where('f1.status', '=', FriendshipStatusSchema.Values['accepted'])
+          .where('f2.status', '=', FriendshipStatusSchema.Values['accepted'])
+          .select((eb) => [eb.fn.countAll().as('mutualFriendCount')])
+
+        return conn
           .selectFrom('users as friends')
           .innerJoin('friendships', 'friendships.friendUserId', 'friends.id')
           .innerJoin(
             userTotalFriendCount(conn).as('userTotalFriendCount'),
             'userTotalFriendCount.userId',
             'friends.id'
+          )
+          .leftJoin(mutualFriendCountSubquery.as('mutualFriends'), (join) =>
+            join.onTrue()
           )
           .where('friendships.userId', '=', ctx.session.userId)
           .where('friendships.friendUserId', '=', input.friendUserId)
@@ -59,6 +56,7 @@ export const myFriendRouter = router({
             'friends.fullName',
             'friends.phoneNumber',
             'totalFriendCount',
+            'mutualFriends.mutualFriendCount',
           ])
           .executeTakeFirstOrThrow(() => new TRPCError({ code: 'NOT_FOUND' }))
           .then(
@@ -70,7 +68,7 @@ export const myFriendRouter = router({
               mutualFriendCount: CountSchema,
             }).parse
           )
-      )
+      })
     }),
 })
 
