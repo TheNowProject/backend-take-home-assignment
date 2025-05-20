@@ -86,6 +86,7 @@ export const friendshipRequestRouter = router({
           friendUserId: input.friendUserId,
           status: FriendshipStatusSchema.Values['requested'],
         })
+        .onConflict((oc) =>oc.columns(['userId', 'friendUserId']).doUpdateSet({ status: 'requested' }))
         .execute()
     }),
 
@@ -117,6 +118,21 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+        const currentUserId = ctx.session.userId;
+        const friendUserId = input.friendUserId;
+
+        await t.updateTable('friendships').set({status: 'accepted'})
+              .where('userId', '=', friendUserId)
+              .where('friendUserId', '=', currentUserId)
+              .execute();
+
+        await t.insertInto('friendships').values({
+                userId: currentUserId,
+                friendUserId: friendUserId,
+                status: 'accepted'
+              })
+              .onConflict((oc) =>oc.columns(['userId', 'friendUserId']).doUpdateSet({ status: 'accepted' }))
+              .execute();
       })
     }),
 
@@ -137,5 +153,14 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+      const currentUserId = ctx.session.userId;
+      const frinedUserId= input.friendUserId;
+      await ctx.db.updateTable('friendships')
+            .set({
+              status: 'declined'
+            })
+            .where('userId', '=', frinedUserId)
+            .where('friendUserId', '=', currentUserId)
+            .execute();
     }),
 })

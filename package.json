@@ -27,6 +27,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "superjson": "1.12.2",
+    "tnp-backend-interview": "file:",
     "zod": "3.21.4"
   },
   "devDependencies": {
@@ -49,8 +50,8 @@
     "prettier-plugin-tailwindcss": "^0.2.8",
     "prisma": "4.14.0",
     "prisma-kysely": "1.5.0",
-    "tailwindcss": "3.3.0",
     "sql-formatter": "12.2.3",
+    "tailwindcss": "3.3.0",
     "typescript": "5.0.4",
     "vitest": "0.33.0"
   },
