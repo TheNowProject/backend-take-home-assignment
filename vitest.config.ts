@@ -13,7 +13,6 @@ export default defineConfig({
     globalSetup: './src/server/tests/global-setup.ts',
     testTimeout: 30 * 1000,
     bail: 1,
-    threads: true,
   },
   resolve: {
     alias: {
