@@ -20,7 +20,7 @@ export const myFriendRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.connection().execute(async (conn) =>
+      return ctx.db.connection().execute(async (conn) => {
         /**
          * Question 4: Implement mutual friend count
          *
@@ -39,7 +39,20 @@ export const myFriendRouter = router({
          * Documentation references:
          *  - https://kysely-org.github.io/kysely/classes/SelectQueryBuilder.html#innerJoin
          */
-        conn
+        // Subquery tính số bạn chung (mutualFriendCount)
+        const mutualFriendCountSubquery = conn
+          .selectFrom('friendships as f1')
+          .innerJoin('friendships as f2', 'f1.friendUserId', 'f2.friendUserId')
+          .where('f1.userId', '=', ctx.session.userId)
+          .where('f2.userId', '=', input.friendUserId)      
+          .where('f1.status', '=', FriendshipStatusSchema.Values['accepted'])
+          .where('f2.status', '=', FriendshipStatusSchema.Values['accepted'])
+          .select((eb) =>
+            eb.fn.count(eb.ref('f1.friendUserId')).as('count')
+          )
+
+
+        return conn
           .selectFrom('users as friends')
           .innerJoin('friendships', 'friendships.friendUserId', 'friends.id')
           .innerJoin(
@@ -59,6 +72,7 @@ export const myFriendRouter = router({
             'friends.fullName',
             'friends.phoneNumber',
             'totalFriendCount',
+            mutualFriendCountSubquery.as('mutualFriendCount'),
           ])
           .executeTakeFirstOrThrow(() => new TRPCError({ code: 'NOT_FOUND' }))
           .then(
@@ -69,8 +83,8 @@ export const myFriendRouter = router({
               totalFriendCount: CountSchema,
               mutualFriendCount: CountSchema,
             }).parse
-          )
-      )
+          );
+      });
     }),
 })
 

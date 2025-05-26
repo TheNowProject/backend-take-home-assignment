@@ -86,7 +86,12 @@ export const friendshipRequestRouter = router({
           friendUserId: input.friendUserId,
           status: FriendshipStatusSchema.Values['requested'],
         })
-        .execute()
+        .onConflict((oc) =>
+          oc.columns(['userId', 'friendUserId']).doUpdateSet({
+            status: FriendshipStatusSchema.Values['requested'],
+          })
+        )
+        .execute();
     }),
 
   accept: procedure
@@ -94,6 +99,25 @@ export const friendshipRequestRouter = router({
     .input(AnswerFriendshipRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
       await ctx.db.transaction().execute(async (t) => {
+        await t
+          .updateTable('friendships')
+          .set({
+            status: 'accepted',
+          })
+          .where('friendships.userId', '=', input.friendUserId) // người gửi lời mời
+          .where('friendships.friendUserId', '=', ctx.session.userId) // người chấp nhận
+          .execute();
+
+        await t
+          .insertInto('friendships')
+          .values({
+            userId: ctx.session.userId,        // người chấp nhận
+            friendUserId: input.friendUserId,  // người gửi lời mời
+            status: 'accepted',
+          })
+          .onConflict((oc) => oc.columns(['userId', 'friendUserId']).doUpdateSet({ status: 'accepted' }))
+          .execute();
+
         /**
          * Question 1: Implement api to accept a friendship request
          *
@@ -124,7 +148,14 @@ export const friendshipRequestRouter = router({
     .use(canAnswerFriendshipRequest)
     .input(AnswerFriendshipRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .updateTable('friendships')
+        .set({ status: 'declined' })
+        .where('userId', '=', input.friendUserId)         // người gửi lời mời
+        .where('friendUserId', '=', ctx.session.userId)   // người đang từ chối
+        .execute();
       /**
+       * 
        * Question 2: Implement api to decline a friendship request
        *
        * Set the friendship request status to `declined`
