@@ -73,12 +73,16 @@ export const friendshipRequestRouter = router({
        *  1. User A sends a friendship request to User B
        *  2. User B declines the friendship request
        *  3. User A tries to send another friendship request to User B -> ERROR
-       *
+       *[]
        * Instructions:
        *  - Go to src/server/tests/friendship-request.test.ts, enable the test
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
+      await ctx.db.deleteFrom('friendships')
+        .where('userId', '=', ctx.session.userId)
+        .where('status', '=', FriendshipStatusSchema.Values['declined'])
+        .execute()
       return ctx.db
         .insertInto('friendships')
         .values({
@@ -117,6 +121,35 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+        await t
+          .updateTable('friendships')
+          .set({
+            status: FriendshipStatusSchema.Values['accepted'],
+          })
+          .where('userId', '=', input.friendUserId)
+          .where('friendUserId', '=', ctx.session.userId)
+          .execute()
+        const checkRequest = await t
+          .selectFrom('friendships')
+          .where('userId', '=', ctx.session.userId)
+          .where('friendUserId', '=', input.friendUserId)
+          .where('status', '=', FriendshipStatusSchema.Values['requested'])
+          .select('userId')
+          .execute();
+        if (checkRequest.length === 0) {
+          await t.insertInto('friendships').values({
+            userId: ctx.session.userId,
+            friendUserId: input.friendUserId,
+            status: FriendshipStatusSchema.Values['accepted'],
+          }).execute()
+        }
+        else {
+          t.updateTable('friendships').set({
+            status: FriendshipStatusSchema.Values['accepted']
+          }).where('userId', '=', ctx.session.userId)
+          .where('friendUserId', '=', input.friendUserId)
+          .execute()
+        }
       })
     }),
 
@@ -137,5 +170,13 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+      return ctx.db
+        .updateTable('friendships')
+        .set({
+          status: FriendshipStatusSchema.Values['declined'],
+        })
+        .where('userId', '=', input.friendUserId)
+        .where('friendUserId', '=', ctx.session.userId)
+        .execute()
     }),
 })

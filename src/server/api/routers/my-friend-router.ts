@@ -11,6 +11,8 @@ import {
   CountSchema,
   IdSchema,
 } from '@/utils/server/base-schemas'
+import { OperandValueExpressionOrList } from 'kysely'
+import { DB } from '@/server/db/types'
 
 export const myFriendRouter = router({
   getById: protectedProcedure
@@ -47,6 +49,11 @@ export const myFriendRouter = router({
             'userTotalFriendCount.userId',
             'friends.id'
           )
+          .innerJoin(
+            userMutualFriendCount(conn, ctx.session.userId, input.friendUserId).as('userMutualFriendCount'),
+            'userMutualFriendCount.userId',
+            'friends.id'
+          )
           .where('friendships.userId', '=', ctx.session.userId)
           .where('friendships.friendUserId', '=', input.friendUserId)
           .where(
@@ -59,6 +66,7 @@ export const myFriendRouter = router({
             'friends.fullName',
             'friends.phoneNumber',
             'totalFriendCount',
+            'mutualFriendCount',
           ])
           .executeTakeFirstOrThrow(() => new TRPCError({ code: 'NOT_FOUND' }))
           .then(
@@ -83,4 +91,25 @@ const userTotalFriendCount = (db: Database) => {
       eb.fn.count('friendships.friendUserId').as('totalFriendCount'),
     ])
     .groupBy('friendships.userId')
+}
+
+const userMutualFriendCount = (
+  db: Database,
+  userAId: OperandValueExpressionOrList<DB, "friendships", "friendships.userId">,
+  userBId: OperandValueExpressionOrList<DB, "friendships", "friendships.userId">
+) => {
+  return db
+    .selectFrom('friendships as f1')
+    .innerJoin(
+      'friendships as f2',
+      'f1.friendUserId', 'f2.friendUserId'
+    )
+    .where('f1.userId', '=', userAId)
+    .where('f2.userId', '=', userBId)
+    .where('f1.status', '=', FriendshipStatusSchema.Values['accepted'])
+    .where('f2.status', '=', FriendshipStatusSchema.Values['accepted'])
+    .select((eb) => [
+      eb.val(userBId).as('userId'),
+      eb.fn.count('f1.friendUserId').as('mutualFriendCount'),
+    ])
 }
