@@ -1,0 +1,7 @@
+Time for Q11: 11ms
+Time for Q41: 4ms
+Time for Q42: 3ms
+Time for Q12: 5ms
+Time for Q21: 3ms
+Time for Q31: 5ms
+Time for Q32: 6ms

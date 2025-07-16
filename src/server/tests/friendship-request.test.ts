@@ -4,6 +4,9 @@ import { FriendshipStatusSchema } from '@/utils/server/friendship-schemas'
 
 import { createUser } from './utils'
 
+const fs = require('fs')
+const writeStream = fs.createWriteStream('logFile.txt')
+
 describe.concurrent('Friendship request', async () => {
   /**
    * Scenario:
@@ -21,12 +24,8 @@ describe.concurrent('Friendship request', async () => {
     await userB.acceptFriendshipRequest({
       friendUserId: userA.id,
     })
-    // eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 1 (Accept friendship request) - Scenario 1: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ11 = Date.now() - startTime
+    writeStream.write(`Time for Q11: ${timeForQ11}ms\n`)
 
     await expect(
       userA.getFriendById({ friendUserId: userB.id })
@@ -66,12 +65,8 @@ describe.concurrent('Friendship request', async () => {
     await userA.acceptFriendshipRequest({
       friendUserId: userB.id,
     })
-    // eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 1 (Accept friendship request) - Scenario 2: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ12 = Date.now() - startTime
+    writeStream.write(`Time for Q12: ${timeForQ12}ms\n`)
 
     await expect(
       userA.getFriendById({ friendUserId: userB.id })
@@ -117,12 +112,8 @@ describe.concurrent('Friendship request', async () => {
     await userB.declineFriendshipRequest({
       friendUserId: userA.id,
     })
-    //eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 2 (Decline friendship request) - Scenario 1: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ21 = Date.now() - startTime
+    writeStream.write(`Time for Q21: ${timeForQ21}ms\n`)
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -147,12 +138,8 @@ describe.concurrent('Friendship request', async () => {
         friendUserId: userB.id,
       })
     ).resolves.not.toThrow()
-    //eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 3 (Fix bug) - Scenario 1: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ31 = Date.now() - startTime
+    writeStream.write(`Time for Q31: ${timeForQ31}ms\n`)
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -185,12 +172,8 @@ describe.concurrent('Friendship request', async () => {
     await userA.sendFriendshipRequest({
       friendUserId: userB.id,
     })
-    //eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 3 (Fix bug) - Scenario 2: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ32 = Date.now() - startTime
+    writeStream.write(`Time for Q32: ${timeForQ32}ms\n`)
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -258,12 +241,8 @@ describe.concurrent('Friendship request', async () => {
         totalFriendCount: 4,
       })
     )
-    // eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 4 (Count mutual friends) - Scenario 1: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ41 = Date.now() - startTime
+    writeStream.write(`Time for Q41: ${timeForQ41}ms\n`)
   })
 
   /**
@@ -331,11 +310,7 @@ describe.concurrent('Friendship request', async () => {
         mutualFriendCount: 1,
       })
     )
-    // eslint-disable-next-line no-console
-    console.log(
-      `Time taken for Question 4 (Count mutual friends) - Scenario 1: ${
-        Date.now() - startTime
-      }ms`
-    )
+    const timeForQ42 = Date.now() - startTime
+    writeStream.write(`Time for Q42: ${timeForQ42}ms\n`)
   })
 })
