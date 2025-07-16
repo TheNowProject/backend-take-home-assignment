@@ -17,9 +17,16 @@ describe.concurrent('Friendship request', async () => {
       friendUserId: userB.id,
     })
 
+    const startTime = Date.now()
     await userB.acceptFriendshipRequest({
       friendUserId: userA.id,
     })
+    // eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 1 (Accept friendship request) - Scenario 1: ${
+        Date.now() - startTime
+      }ms`
+    )
 
     await expect(
       userA.getFriendById({ friendUserId: userB.id })
@@ -55,9 +62,16 @@ describe.concurrent('Friendship request', async () => {
       friendUserId: userA.id,
     })
 
+    const startTime = Date.now()
     await userA.acceptFriendshipRequest({
       friendUserId: userB.id,
     })
+    // eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 1 (Accept friendship request) - Scenario 2: ${
+        Date.now() - startTime
+      }ms`
+    )
 
     await expect(
       userA.getFriendById({ friendUserId: userB.id })
@@ -81,7 +95,7 @@ describe.concurrent('Friendship request', async () => {
    *  1. User A sends a friendship request to user B
    *  2. User B declines the friendship request
    */
-  test.skip('Question 2 / Scenario 1', async ({ expect }) => {
+  test('Question 2 / Scenario 1', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
     await expect(
@@ -99,9 +113,16 @@ describe.concurrent('Friendship request', async () => {
       })
     )
 
+    const startTime = Date.now()
     await userB.declineFriendshipRequest({
       friendUserId: userA.id,
     })
+    //eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 2 (Decline friendship request) - Scenario 1: ${
+        Date.now() - startTime
+      }ms`
+    )
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -117,14 +138,21 @@ describe.concurrent('Friendship request', async () => {
    * Scenario:
    *  1. User A sends a friendship request to user B
    */
-  test.skip('Question 3 / Scenario 1', async ({ expect }) => {
+  test('Question 3 / Scenario 1', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
+    const startTime = Date.now()
     await expect(
       userA.sendFriendshipRequest({
         friendUserId: userB.id,
       })
     ).resolves.not.toThrow()
+    //eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 3 (Fix bug) - Scenario 1: ${
+        Date.now() - startTime
+      }ms`
+    )
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -142,7 +170,7 @@ describe.concurrent('Friendship request', async () => {
    *  2. User B declines the request
    *  3. User A re-sends a new friendship request to user B
    */
-  test.skip('Question 3 / Scenario 2', async ({ expect }) => {
+  test('Question 3 / Scenario 2', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
     await userA.sendFriendshipRequest({
@@ -153,9 +181,16 @@ describe.concurrent('Friendship request', async () => {
       friendUserId: userA.id,
     })
 
+    const startTime = Date.now()
     await userA.sendFriendshipRequest({
       friendUserId: userB.id,
     })
+    //eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 3 (Fix bug) - Scenario 2: ${
+        Date.now() - startTime
+      }ms`
+    )
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -174,7 +209,7 @@ describe.concurrent('Friendship request', async () => {
    *
    *  -> User A should have a total of 4 friends
    */
-  test.skip('Question 4 / Scenario 1', async ({ expect }) => {
+  test('Question 4 / Scenario 1', async ({ expect }) => {
     const [userA, userB, userC, userD, userE] = await Promise.all([
       createUser(),
       createUser(),
@@ -212,7 +247,7 @@ describe.concurrent('Friendship request', async () => {
         friendUserId: userE.id,
       }),
     ])
-
+    const startTime = Date.now()
     await expect(
       userB.getFriendById({
         friendUserId: userA.id,
@@ -222,6 +257,12 @@ describe.concurrent('Friendship request', async () => {
         id: userA.id,
         totalFriendCount: 4,
       })
+    )
+    // eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 4 (Count mutual friends) - Scenario 1: ${
+        Date.now() - startTime
+      }ms`
     )
   })
 
@@ -234,7 +275,7 @@ describe.concurrent('Friendship request', async () => {
    *
    *  -> User A should have 1 mutual friend with user B
    */
-  test.skip('Question 4 / Scenario 2', async ({ expect }) => {
+  test('Question 4 / Scenario 2', async ({ expect }) => {
     const [userA, userB, userC, userD, userE] = await Promise.all([
       createUser(),
       createUser(),
@@ -279,6 +320,7 @@ describe.concurrent('Friendship request', async () => {
       }),
     ])
 
+    const startTime = Date.now()
     await expect(
       userB.getFriendById({
         friendUserId: userA.id,
@@ -288,6 +330,12 @@ describe.concurrent('Friendship request', async () => {
         id: userA.id,
         mutualFriendCount: 1,
       })
+    )
+    // eslint-disable-next-line no-console
+    console.log(
+      `Time taken for Question 4 (Count mutual friends) - Scenario 1: ${
+        Date.now() - startTime
+      }ms`
     )
   })
 })
