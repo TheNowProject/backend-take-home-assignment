@@ -9,12 +9,12 @@ module.exports = {
   },
   plugins: [
     '@typescript-eslint', //
-    
+    'prettier',
   ],
   extends: [
     'plugin:@typescript-eslint/recommended', //
+    'plugin:prettier/recommended',
     'next',
-    
   ],
   rules: {
     '@next/next/no-html-link-for-pages': 'off',

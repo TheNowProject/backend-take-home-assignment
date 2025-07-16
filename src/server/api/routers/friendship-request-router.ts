@@ -79,7 +79,8 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
-      await ctx.db.deleteFrom('friendships')
+      await ctx.db
+        .deleteFrom('friendships')
         .where('userId', '=', ctx.session.userId)
         .where('status', '=', FriendshipStatusSchema.Values['declined'])
         .execute()
@@ -135,20 +136,24 @@ export const friendshipRequestRouter = router({
           .where('friendUserId', '=', input.friendUserId)
           .where('status', '=', FriendshipStatusSchema.Values['requested'])
           .select('userId')
-          .execute();
-        if (checkRequest.length === 0) {
-          await t.insertInto('friendships').values({
-            userId: ctx.session.userId,
-            friendUserId: input.friendUserId,
-            status: FriendshipStatusSchema.Values['accepted'],
-          }).execute()
-        }
-        else {
-          t.updateTable('friendships').set({
-            status: FriendshipStatusSchema.Values['accepted']
-          }).where('userId', '=', ctx.session.userId)
-          .where('friendUserId', '=', input.friendUserId)
           .execute()
+        if (checkRequest.length === 0) {
+          await t
+            .insertInto('friendships')
+            .values({
+              userId: ctx.session.userId,
+              friendUserId: input.friendUserId,
+              status: FriendshipStatusSchema.Values['accepted'],
+            })
+            .execute()
+        } else {
+          t.updateTable('friendships')
+            .set({
+              status: FriendshipStatusSchema.Values['accepted'],
+            })
+            .where('userId', '=', ctx.session.userId)
+            .where('friendUserId', '=', input.friendUserId)
+            .execute()
         }
       })
     }),
