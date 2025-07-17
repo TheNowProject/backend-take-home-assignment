@@ -79,11 +79,6 @@ export const friendshipRequestRouter = router({
        * scenario for Question 3
        *  - Run `yarn test` to verify your answer
        */
-      await ctx.db
-        .deleteFrom('friendships')
-        .where('userId', '=', ctx.session.userId)
-        .where('status', '=', FriendshipStatusSchema.Values['declined'])
-        .execute()
       return ctx.db
         .insertInto('friendships')
         .values({
@@ -91,6 +86,11 @@ export const friendshipRequestRouter = router({
           friendUserId: input.friendUserId,
           status: FriendshipStatusSchema.Values['requested'],
         })
+        .onConflict((oc) =>
+          oc.doUpdateSet({
+            status: FriendshipStatusSchema.Values['requested'],
+          })
+        )
         .execute()
     }),
 
@@ -123,38 +123,25 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
         await t
-          .updateTable('friendships')
-          .set({
-            status: FriendshipStatusSchema.Values['accepted'],
-          })
-          .where('userId', '=', input.friendUserId)
-          .where('friendUserId', '=', ctx.session.userId)
-          .execute()
-        const checkRequest = await t
-          .selectFrom('friendships')
-          .where('userId', '=', ctx.session.userId)
-          .where('friendUserId', '=', input.friendUserId)
-          .where('status', '=', FriendshipStatusSchema.Values['requested'])
-          .select('userId')
-          .execute()
-        if (checkRequest.length === 0) {
-          await t
-            .insertInto('friendships')
-            .values({
+          .insertInto('friendships')
+          .values([
+            {
+              userId: input.friendUserId,
+              friendUserId: ctx.session.userId,
+              status: FriendshipStatusSchema.Values['accepted'],
+            },
+            {
               userId: ctx.session.userId,
               friendUserId: input.friendUserId,
               status: FriendshipStatusSchema.Values['accepted'],
-            })
-            .execute()
-        } else {
-          t.updateTable('friendships')
-            .set({
+            },
+          ])
+          .onConflict((oc) =>
+            oc.doUpdateSet({
               status: FriendshipStatusSchema.Values['accepted'],
             })
-            .where('userId', '=', ctx.session.userId)
-            .where('friendUserId', '=', input.friendUserId)
-            .execute()
-        }
+          )
+          .execute()
       })
     }),
 

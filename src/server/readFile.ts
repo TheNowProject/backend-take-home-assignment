@@ -4,12 +4,12 @@ const path = require('path')
 const logFilePath = path.join(__dirname, '..', '..', 'logFile.txt')
 
 // Read the file asynchronously
-fs.readFile(logFilePath, 'utf8', (err, data) => {
+fs.readFile(logFilePath, 'utf8', (err: unknown, data: string) => {
   if (err) {
     //eslint-disable-next-line no-console
     console.error('Error reading file:', err)
   } else {
-    let lines = data.split('\n')
+    const lines = data.split('\n')
     let totalTimeQ1 = 0
     let totalTimeQ2 = 0
     let totalTimeQ3 = 0
@@ -50,9 +50,9 @@ fs.readFile(logFilePath, 'utf8', (err, data) => {
     }
     //eslint-disable-next-line no-console
     console.log(`
-      Time for Q1: ${totalTimeQ1 / 2}ms
-      Time for Q2: ${totalTimeQ2}ms
-      Time for Q3: ${totalTimeQ3 / 2}ms
-      Time for Q4: ${totalTimeQ4 / 2}ms`)
+      Time for Accept friend request API: ${totalTimeQ1 / 2}ms
+      Time for Decline friend request API: ${totalTimeQ2}ms
+      Time for Resend friend request API: ${totalTimeQ3 / 2}ms
+      Time for Count mutual friend: ${totalTimeQ4 / 2}ms`)
   }
 })
