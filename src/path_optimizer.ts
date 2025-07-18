@@ -3,21 +3,26 @@ function PathOptimizerWithoutBC(
   pathAC: number,
   pathBD: number
 ) {
-  const result: unknown[] = []
-  for (let i = 1; i <= 4000; i++) {
-    if (i / 100 + pathBD >= pathAC + (totalRequests - i) / 200) {
-      result.push({
-        numberOfConcurrentRequests: i,
-        pathForNewRequest: 'A->C->D',
-      })
-    } else {
-      result.push({
-        numberOfConcurrentRequests: i,
-        pathForNewRequest: 'A->B->D',
-      })
+  const x = Math.floor((100 / 3) * (pathAC - pathBD + totalRequests / 100))
+  console.log(`
+    Requests for path ABD: ${x}
+    Requests for path ACD: ${totalRequests - x}
+  `)
+
+  let min = Infinity
+  let requestsForPathABD
+  for (let i = 0; i <= totalRequests; i++) {
+    const result =
+      i * (i / 100 + pathBD) +
+      (totalRequests - i) * (pathAC + (totalRequests - i) / 200)
+    if (result < min) {
+      requestsForPathABD = i
+      min = result
     }
   }
-  console.log(result)
+  console.log(`
+    Requests for path ABD (check using loop):', ${requestsForPathABD}
+  `)
 }
 
 function PathOptimizerWithBC(
@@ -26,31 +31,40 @@ function PathOptimizerWithBC(
   pathBC: number,
   pathBD: number
 ) {
-  const result: unknown[] = []
-  for (let i = 1; i <= 4000; i++) {
-    const pathABD = i / 100 + pathBD
-    const pathACD = pathAC + (totalRequests - i) / 200
-    const pathABCD = i / 100 + pathBC + (totalRequests - i) / 200
-    const min = Math.min(pathABD, pathACD, pathABCD)
-    if (min == pathABD) {
-      result.push({
-        numberOfConcurrentRequests: i,
-        pathForNewRequest: 'A->B->D',
-      })
-    } else if (min == pathACD) {
-      result.push({
-        numberOfConcurrentRequests: i,
-        pathForNewRequest: 'A->C->D',
-      })
-    } else {
-      result.push({
-        numberOfConcurrentRequests: i,
-        pathForNewRequest: 'A->B->C->D',
-      })
+  const i = Math.max(0, Math.floor(50 * (2 - pathBD)))
+  const j = Math.max(0, Math.floor(100 * (2 - pathAC)))
+  const k = totalRequests - i - j
+  console.log(`
+    Requests for path ABD: ${i}
+    Requests for path ACD: ${j}
+    Requests for path ABCD: ${k}
+  `)
+
+  let min = Infinity
+  let requestsForPathABD
+  let requestsForPathACD
+  let requestsForPathABCD
+  for (let i = 0; i <= totalRequests; i++) {
+    for (let j = 0; j <= totalRequests; j++) {
+      if (i + j <= totalRequests) {
+        let k = totalRequests - i - j
+        const result = i * (i / 100 + pathBD) + j * (pathAC + j / 200) + k * 2
+        if (result < min) {
+          requestsForPathABD = i
+          requestsForPathACD = j
+          requestsForPathABCD = k
+          min = result
+        }
+      }
     }
   }
-  console.log(result)
+  console.log(`
+    Requests for path ABD (check using loop): ${requestsForPathABD}
+    Requests for path ACD (check using loop): ${requestsForPathACD}
+    Requests for path ABCD (check using loop): ${requestsForPathABCD}
+  `)
 }
 
 PathOptimizerWithoutBC(4000, 50, 35)
-PathOptimizerWithBC(4000, 50, 2, 35)
+console.log('===========================================================')
+PathOptimizerWithBC(1000, 50, 2, 35)
