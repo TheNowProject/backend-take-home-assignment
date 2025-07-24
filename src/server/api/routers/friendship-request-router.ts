@@ -73,7 +73,7 @@ export const friendshipRequestRouter = router({
        *  1. User A sends a friendship request to User B
        *  2. User B declines the friendship request
        *  3. User A tries to send another friendship request to User B -> ERROR
-       *
+       *[]
        * Instructions:
        *  - Go to src/server/tests/friendship-request.test.ts, enable the test
        * scenario for Question 3
@@ -86,6 +86,11 @@ export const friendshipRequestRouter = router({
           friendUserId: input.friendUserId,
           status: FriendshipStatusSchema.Values['requested'],
         })
+        .onConflict((oc) =>
+          oc.doUpdateSet({
+            status: FriendshipStatusSchema.Values['requested'],
+          })
+        )
         .execute()
     }),
 
@@ -117,6 +122,26 @@ export const friendshipRequestRouter = router({
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#insertInto
          *  - https://kysely-org.github.io/kysely/classes/Kysely.html#updateTable
          */
+        await t
+          .insertInto('friendships')
+          .values([
+            {
+              userId: input.friendUserId,
+              friendUserId: ctx.session.userId,
+              status: FriendshipStatusSchema.Values['accepted'],
+            },
+            {
+              userId: ctx.session.userId,
+              friendUserId: input.friendUserId,
+              status: FriendshipStatusSchema.Values['accepted'],
+            },
+          ])
+          .onConflict((oc) =>
+            oc.doUpdateSet({
+              status: FriendshipStatusSchema.Values['accepted'],
+            })
+          )
+          .execute()
       })
     }),
 
@@ -137,5 +162,13 @@ export const friendshipRequestRouter = router({
        * Documentation references:
        *  - https://vitest.dev/api/#test-skip
        */
+      return ctx.db
+        .updateTable('friendships')
+        .set({
+          status: FriendshipStatusSchema.Values['declined'],
+        })
+        .where('userId', '=', input.friendUserId)
+        .where('friendUserId', '=', ctx.session.userId)
+        .execute()
     }),
 })

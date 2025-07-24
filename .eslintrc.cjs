@@ -13,8 +13,8 @@ module.exports = {
   ],
   extends: [
     'plugin:@typescript-eslint/recommended', //
+    'plugin:prettier/recommended',
     'next',
-    'prettier',
   ],
   rules: {
     '@next/next/no-html-link-for-pages': 'off',

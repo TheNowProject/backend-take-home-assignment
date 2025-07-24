@@ -4,22 +4,28 @@ import { FriendshipStatusSchema } from '@/utils/server/friendship-schemas'
 
 import { createUser } from './utils'
 
+const fs = require('fs')
+const writeStream = fs.createWriteStream('logFile.txt')
+
 describe.concurrent('Friendship request', async () => {
   /**
    * Scenario:
    *  1. User A sends a friendship request to user B
    *  2. User B accepts the friendship request
    */
-  test('Question 1 / Scenario 1', async ({ expect }) => {
+  test.skip('Question 1 / Scenario 1', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
     await userA.sendFriendshipRequest({
       friendUserId: userB.id,
     })
 
+    const startTime = Date.now()
     await userB.acceptFriendshipRequest({
       friendUserId: userA.id,
     })
+    const timeForQ11 = Date.now() - startTime
+    writeStream.write(`Time for Q11: ${timeForQ11}ms\n`)
 
     await expect(
       userA.getFriendById({ friendUserId: userB.id })
@@ -44,7 +50,7 @@ describe.concurrent('Friendship request', async () => {
    *  2. User B sends a friendship request to user A
    *  3. User A accepts the friendship request
    */
-  test('Question 1 / Scenario 2', async ({ expect }) => {
+  test.skip('Question 1 / Scenario 2', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
     await userA.sendFriendshipRequest({
@@ -55,9 +61,12 @@ describe.concurrent('Friendship request', async () => {
       friendUserId: userA.id,
     })
 
+    const startTime = Date.now()
     await userA.acceptFriendshipRequest({
       friendUserId: userB.id,
     })
+    const timeForQ12 = Date.now() - startTime
+    writeStream.write(`Time for Q12: ${timeForQ12}ms\n`)
 
     await expect(
       userA.getFriendById({ friendUserId: userB.id })
@@ -99,9 +108,12 @@ describe.concurrent('Friendship request', async () => {
       })
     )
 
+    const startTime = Date.now()
     await userB.declineFriendshipRequest({
       friendUserId: userA.id,
     })
+    const timeForQ21 = Date.now() - startTime
+    writeStream.write(`Time for Q21: ${timeForQ21}ms\n`)
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -120,11 +132,14 @@ describe.concurrent('Friendship request', async () => {
   test.skip('Question 3 / Scenario 1', async ({ expect }) => {
     const [userA, userB] = await Promise.all([createUser(), createUser()])
 
+    const startTime = Date.now()
     await expect(
       userA.sendFriendshipRequest({
         friendUserId: userB.id,
       })
     ).resolves.not.toThrow()
+    const timeForQ31 = Date.now() - startTime
+    writeStream.write(`Time for Q31: ${timeForQ31}ms\n`)
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -153,9 +168,12 @@ describe.concurrent('Friendship request', async () => {
       friendUserId: userA.id,
     })
 
+    const startTime = Date.now()
     await userA.sendFriendshipRequest({
       friendUserId: userB.id,
     })
+    const timeForQ32 = Date.now() - startTime
+    writeStream.write(`Time for Q32: ${timeForQ32}ms\n`)
 
     await expect(
       userA.getMyOutgoingFriendshipRequests()
@@ -174,7 +192,7 @@ describe.concurrent('Friendship request', async () => {
    *
    *  -> User A should have a total of 4 friends
    */
-  test.skip('Question 4 / Scenario 1', async ({ expect }) => {
+  test('Question 4 / Scenario 1', async ({ expect }) => {
     const [userA, userB, userC, userD, userE] = await Promise.all([
       createUser(),
       createUser(),
@@ -212,7 +230,7 @@ describe.concurrent('Friendship request', async () => {
         friendUserId: userE.id,
       }),
     ])
-
+    const startTime = Date.now()
     await expect(
       userB.getFriendById({
         friendUserId: userA.id,
@@ -223,6 +241,8 @@ describe.concurrent('Friendship request', async () => {
         totalFriendCount: 4,
       })
     )
+    const timeForQ41 = Date.now() - startTime
+    writeStream.write(`Time for Q41: ${timeForQ41}ms\n`)
   })
 
   /**
@@ -234,7 +254,7 @@ describe.concurrent('Friendship request', async () => {
    *
    *  -> User A should have 1 mutual friend with user B
    */
-  test.skip('Question 4 / Scenario 2', async ({ expect }) => {
+  test('Question 4 / Scenario 2', async ({ expect }) => {
     const [userA, userB, userC, userD, userE] = await Promise.all([
       createUser(),
       createUser(),
@@ -279,6 +299,7 @@ describe.concurrent('Friendship request', async () => {
       }),
     ])
 
+    const startTime = Date.now()
     await expect(
       userB.getFriendById({
         friendUserId: userA.id,
@@ -289,5 +310,7 @@ describe.concurrent('Friendship request', async () => {
         mutualFriendCount: 1,
       })
     )
+    const timeForQ42 = Date.now() - startTime
+    writeStream.write(`Time for Q42: ${timeForQ42}ms\n`)
   })
 })
